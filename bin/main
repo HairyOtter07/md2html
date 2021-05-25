@@ -1,0 +1,46 @@
+#!/usr/bin/env node
+
+const remark = require("remark");
+const html = require("remark-html");
+const fs = require("fs");
+
+let args = process.argv.slice(2);
+
+if (args.length < 1) {
+    args = ["--help"];
+}
+
+if (args.includes("--help")) {
+    let help_str = "usage: md2html <filename> [options]\n\noptions:\n--help\t\t\tshow this message\n-o, --out\t\tspecify output filename (defaults to {filename no extension}.html)";
+    console.log(help_str);
+    process.exit(0);
+}
+
+function parseOutput(args) {
+    let output_fname;
+    if (args.includes("-o")) {
+        output_fname = args[args.indexOf("-o") +  1];
+    } else if (args.includes("--out")) {
+        output_fname = args[args.indexOf("--out") + 1];
+    } else {
+        output_fname = null;
+    }
+    return output_fname
+}
+
+let input_fname = args[0];
+let parsed = parseOutput(args);
+let output_fname = parsed ? parsed : input_fname.replace(/\.[^\.]*$/, "") + ".html";
+
+
+async function processMD() {
+    const input = fs.readFileSync(input_fname);
+
+    const processedContent = await remark()
+        .use(html)
+        .process(input);
+
+    fs.writeFileSync(output_fname, processedContent);
+}
+
+processMD();
